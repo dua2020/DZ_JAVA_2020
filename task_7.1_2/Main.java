@@ -38,7 +38,7 @@ public class Main {
         long day_ChasMinSecMsec = inputDate.getTime() - yearInputdate.getTime();
         long dayInChasMinSecMsec = 24 * 60 * 60 *1000;
 
-        int days = (int) (day_ChasMinSecMsec/dayInChasMinSecMsec);
+        int days = (int) (day_ChasMinSecMsec/dayInChasMinSecMsec) + 1;
         System.out.println(yearInputdate.toString());
         if (days % 2 == 0)
             return false;
