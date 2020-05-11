@@ -42,15 +42,28 @@ public class Main {
         int step4 = (19*ostDiv19 + 15) % 30;
         int step5 = (2*ostDiv4 + 4*ostDiv7 + 6*step4 + 6) % 7;
         int step6sum = step4 + step5;
-        if (step6sum <= 9)
-            {dayEaster = 22 + step6sum;
-            dateOut = LocalDate.of(nYear, 3, dayEaster);
+        if (nYear < 1918) // по старому стилю:
+        {
+            if (step6sum <= 9) {
+                dayEaster = 22 + step6sum;
+                dateOut = LocalDate.of(nYear, 3, dayEaster);
             }
-        else
-            {dayEaster = step6sum - 9;
-            dateOut = LocalDate.of(nYear, 4, dayEaster);
+            else {
+                dayEaster = step6sum - 9;
+                dateOut = LocalDate.of(nYear, 4, dayEaster);
             }
-        if (nYear >= 1918) dateOut = dateOut.plusDays(13); // новый стиль
+        }
+        else  // по новому стилю:
+        {
+            if (step6sum <= 26) {
+                dayEaster = 4 + step6sum;
+                dateOut = LocalDate.of(nYear, 4, dayEaster);
+            }
+            else {
+                dayEaster = step6sum - 26;
+                dateOut = LocalDate.of(nYear, 5, dayEaster);
+            }
+        }
         return (dateOut);
     }
 }
