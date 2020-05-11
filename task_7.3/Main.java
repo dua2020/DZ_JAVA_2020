@@ -21,7 +21,11 @@ public class Main {
         BufferedReader inputDate = new BufferedReader(new InputStreamReader(System.in));
         SimpleDateFormat sdf = new SimpleDateFormat(patternInput);
         Date date = sdf.parse(inputDate.readLine());
-        System.out.println("Дата Православной Пасхи по новому стилю: "+getEaster(date));
+        Calendar calendar = new GregorianCalendar();
+        calendar.setTime(date);
+        if (calendar.get(Calendar.YEAR) >= 1918)
+           System.out.println("Дата Православной Пасхи по новому стилю: "+getEaster(date));
+        else System.out.println("Дата Православной Пасхи по старому стилю: "+getEaster(date));
     }
     public static LocalDate getEaster(Date date) {
         // определите тип данных самостоятельно
@@ -29,6 +33,7 @@ public class Main {
         Calendar calendar = new GregorianCalendar();
         calendar.setTime(date);
         int nYear = calendar.get(Calendar.YEAR);
+        LocalDate dateOut = LocalDate.of(nYear, 1, 1);
         // System.out.println(nYear);
         int dayEaster = 0;
         int ostDiv19 = nYear % 19;
@@ -38,14 +43,14 @@ public class Main {
         int step5 = (2*ostDiv4 + 4*ostDiv7 + 6*step4 + 6) % 7;
         int step6sum = step4 + step5;
         if (step6sum <= 9)
-        {dayEaster = 22 + step6sum;
-            LocalDate dateOut = LocalDate.of(nYear, 3, dayEaster);
-            dateOut = dateOut.plusDays(13); // новый стиль
-            return (dateOut);}
+            {dayEaster = 22 + step6sum;
+            dateOut = LocalDate.of(nYear, 3, dayEaster);
+            }
         else
-        {dayEaster = step6sum - 9;
-            LocalDate dateOut = LocalDate.of(nYear, 4, dayEaster);
-            dateOut = dateOut.plusDays(13); // новый стиль
-            return (dateOut);}
+            {dayEaster = step6sum - 9;
+            dateOut = LocalDate.of(nYear, 4, dayEaster);
+            }
+        if (nYear >= 1918) dateOut = dateOut.plusDays(13); // новый стиль
+        return (dateOut);
     }
 }
