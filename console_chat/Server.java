@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Server {
-    static List<ClientHandler> clients = Collections.synchronizedList (new ArrayList<ClientHandler>());
+    static List<ClientHandler> clients = Collections.synchronizedList(new ArrayList<ClientHandler>());
     public static void main(String[] args) {
 
         Socket socket = null;
@@ -20,39 +20,44 @@ public class Server {
             System.out.println("Сервер запущен!");
             while(true) {
                 socket = serverSocket.accept();
-                clients.add(new ClientHandler(socket));
-                //     System.out.println("Клиент " + clients.iterator() + " подключился!");
-            }
-        /*    synchronized(clients) {
-                Iterator<ClientHandler> iter = clients.iterator();
-                while(iter.hasNext()) {
-                    ((Connection) iter.next()).out.writeUTF("клиент " + iter.toString() + " подключился к серверу");
- ТУТ надо написать вывод в консоль !!!
-                  while(iter.hasNext()) {
-                     ((Connection) iter.next()).close();
-                  }
-            } */
-      /*      for(ClientHandler c : clients) {
-                System.out.println(clients + " подключился к серверу");
-            } */
-        } catch (IOException e) {
+                // Создаём объект ClientHandler и добавляем его в список
+                ClientHandler clientHndlr = new ClientHandler(socket);
+                clients.add(clientHndlr);
+                //  clients.add(new ClientHandler(socket));
+                clientHndlr.start();
+                // System.out.println("Клиент " + clients.iterator().toString() + " подключился!");
+                System.out.println("Сервер говорит: Клиент подключился к серверу!");
+                }
+         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            try {
-                socket.close();
-            }catch (IOException e){
-                e.printStackTrace();
-            }
+            Server.closeAll();
             try {
                 serverSocket.close();
             } catch (IOException e) {
                 e.printStackTrace();
+                }
             }
         }
-    }
     static public void broadcastMsg(String msg){
-        for(ClientHandler o: clients){
+        for(ClientHandler o: clients) {
             o.sendMsg(msg);
+        }
+    }
+    static public void closeAll() {
+        try {
+            // serverSocket.close(); !!!
+            // Перебор всех Connection и вызов метода close() для каждого. Блок
+            // synchronized {} необходим для правильного доступа к одним данным
+            // их разных нитей
+            synchronized(clients) {
+                Iterator<ClientHandler> iter = clients.iterator();
+                while(iter.hasNext()) {
+                    ((Connection) iter.next()).close();
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Потоки не закрыты !!!");
         }
     }
 }
