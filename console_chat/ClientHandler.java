@@ -4,19 +4,17 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.sql.Connection;
 import java.util.Iterator;
 
-import static Server.Server.clients;
-
+import static Server.Server.clients;  // ???
 
 public class ClientHandler extends Thread {
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
-    private String userName = "";   // добавили имя с кем чат
+    public static String userName = "";   // добавили имя с кем чат
 
-    public ClientHandler(Socket socket){
+    public ClientHandler(Socket socket) {
         try {
             this.socket = socket;
             this.in = new DataInputStream(socket.getInputStream());
@@ -24,51 +22,69 @@ public class ClientHandler extends Thread {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    String str = "";
-                    /* try {
+                    try {
                         // userName = in.readLine();
-                        userName = in.readUTF();
-                         while (true) {
-                              str = "";
-                              str = in.readUTF();
-                           // str = in.readLine();
-                            if (str.equals("exit")) break;
-                            else Server.broadcastMsg(str);
-                        } */
-                        try {
-                            // userName = in.readLine();
-                            userName = in.readUTF();
-                            for(ClientHandler iter : clients) {
-                                iter.out.writeUTF(userName + " вошел на серевер");
+                        userName = in.readUTF().toString();
+                        synchronized (clients) {
+                            Iterator<ClientHandler> iter = clients.iterator();
+                            while (iter.hasNext()) {
+                                iter.next().out.writeUTF("клиент " + userName + " подключился к серверу");
                             }
-                            String str1 = "";
-                            while (true) {
-                            //    str = in.readLine();
-                                userName = in.readUTF();
-                                if(str1.equals("exit")) break;
-                                else Server.broadcastMsg(str);
-
-                                for(ClientHandler iter : clients) {
-                                    iter.out.writeUTF(userName + ": " + str1);
+                        }
+                        String str = "";
+                        while (true) {
+                            //  str = in.readLine();
+                            str = in.readUTF().toString();
+                            if (str.equals("exit")) break;
+                            Server.broadcastMsg(userName + "" + str);
+                            // Отправляем всем клиентам очередное сообщение
+                            synchronized (clients) {
+                                Iterator<ClientHandler> iter = clients.iterator();
+                                while (iter.hasNext()) {
+                                    ((ClientHandler) iter.next()).out.writeUTF(userName + ": " + str);
                                 }
                             }
-                            for(ClientHandler iter : clients) {
-                                iter.out.writeUTF(userName + " покинул чат");
+                        }
+                        synchronized(clients) {
+                            Iterator<ClientHandler> iter = clients.iterator();
+                            while(iter.hasNext()) {
+                                ((ClientHandler) iter.next()).out.writeUTF(userName + " покинул чат");
                             }
-                        } catch (IOException e) {
+                        }
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             }).start();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+     }
+    public void sendMsg(String msg){
+        try {
+            out.writeUTF("Все привет: "+msg);
+         //   System.out.println("Привет "+ userName);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    public void sendMsg(String msg){
+     //  Закрывает входной и выходной потоки и сокет
+
+    public void close() {
         try {
-            out.writeUTF(msg);
-        } catch (IOException e) {
-            e.printStackTrace();
+            in.close();
+            out.close();
+            socket.close();
+
+            // Если больше не осталось соединений, закрываем всё,
+            // что есть и завершаем работу сервера
+            clients.remove(this);
+            if (clients.size() == 0) {
+                Server.closeAll();
+                System.exit(0);
+            }
+        } catch (Exception e) {
+            System.err.println("Потоки не были закрыты!");
         }
     }
 }
